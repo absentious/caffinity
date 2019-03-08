@@ -1,0 +1,79 @@
+<!-- Simple same-origin page for manual integration tests. -->
+<html>
+    <head>
+        <title>Server Test</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+       
+    </head>
+    <body>
+        <button id="login" type="button">login</button>
+        <button id="logout" type="button">logout</button>
+        <br/>    
+        <h2>Analyze image</h2>
+        <form 
+            id="data"
+            method="POST" action="/api/classify" enctype=multipart/form-data>
+            file : <input id="image" type="file" name="image" /><br />
+            model: <select name="model">
+                <option value="sample">Sample</option> 
+                <option value="keras_sample">Keras</option> 
+            </select>
+            <input type="submit" value="submit"><br />
+        </form>
+        <br/>
+        <h2>Upload plugin</h2>
+        <form 
+            id="plugin"
+            method="POST" action="/plugins" enctype=multipart/form-data>
+            name: <input type="text" name="name" value="keras_sample" required /><br />
+            code: <input type="file" name="code" accept=".zip" required /><br />
+            <input type="submit" value="submit"><br />
+        </form>
+
+        <pre id="result"></pre>
+        <script type='text/javascript'>
+            $('#login').click(() => {
+                let  body = new URLSearchParams();
+                body.append('username', 'admin');
+                body.append('password', 'admin'); 
+                fetch('/login', {
+                    method: 'POST',
+                    body,
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                }).then(async response => {
+                    console.log(response, await response.text())
+                }).catch(err => {
+                    console.error(err)
+                })
+            })
+            $('#logout').click(() => {
+                fetch('/logout').then(console.log)
+            })
+            $("form").submit(function (e) {
+                    e.preventDefault();
+                    var formData = new FormData(this);
+                    //var formData = new FormData();
+                    //formData.append('model', 'sample')
+                    //formData.append('image', $('#image')[0].files[0])
+                    fetch(e.target.action, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include',
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json()
+                        }
+                        console.error(response)
+                        return response.text()
+                    }).then(response => {
+                        $("#result").html(JSON.stringify(response))
+                        console.log('Success:', response)
+                    }).catch(error => {
+                        $("#result").html(error)
+                        console.error('Error:', error)
+                    })
+                });
+        </script>
+    </body>
+</html>
